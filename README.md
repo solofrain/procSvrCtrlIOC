@@ -9,9 +9,6 @@ http://controls.diamond.ac.uk/downloads/support/procServControl/
 - It fetches IOC names from `records.dbl` files in IOC directories;
 - It assumes PVs that contains IOC names (`$(Sys){IOC:$(iocname)}xxx`) exist in `records.dbl`.
 
-## Python module used
-
-- parse (https://pypi.org/project/parse/)
 
 ## Usage
 

@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 #=================================
-# Author: Ji Li <liji@bn.gov
+# Author: Ji Li <liji@bn.gov>
 #=================================
-from parse import parse
 import os
 
 STATUS_LIST_FILE = "status.list"
@@ -32,40 +31,58 @@ def get_iocs():
     # Get active IOCs
     with open (STATUS_LIST_FILE, 'r') as f:
         for line in f:
-            status_profile = parse("/etc/init.d/softioc-{ioc}\t\t{status}", line)
-            
-            if status_profile['ioc'] in ignore_list:
-                print(status_profile['ioc'] + " ignored.")
+            if '/etc/init.d' not in line:
+                print(line + " is an invalid record")
                 continue
 
-            if ("Not" in status_profile['status']):
-                print(status_profile['ioc'] + " is inactive.")
+            status_profile = line.split('\t')
+            ioc = status_profile[0][20:len(status_profile[0])]
+            print("IOC: " + ioc)
+            if ioc in ignore_list:
+                print(ioc + " ignored.")
+                continue
+                
+            status = status_profile[len(status_profile)-1]
+            if "Not registered" in status:
+                print(ioc + " is inactive.")
                 continue
 
-            if (status_profile!= None):
-                status_list.append(status_profile['ioc'])
+            status_list.append(ioc)
+
+    f.close()
+
+    print(status_list)
 
     # Get directories of the IOCs
     with open (REPORT_LIST_FILE, 'r') as f:
         for line in f:
-            line = line.replace(" ", "")
-            report_profile = parse("/epics/iocs|{ioc}|{user}|{port}|{stcmd}", line)
-            if (report_profile == None):
+            if '/epics/iocs' not in line:
+                print(line + " is an invalid record")
                 continue
 
-            if report_profile['ioc'] in status_list:
-                if "/epics/iocs/" in report_profile['stcmd']:
-                    profile = parse("/epics/iocs/{folder}/{dontcare}",
-                                    report_profile['stcmd'])
+            report = line.split('|')
+            ioc= report[1].strip()
+            print("IOC: " + ioc + " in record " + line)
+            
+            if ioc not in status_list:
+                print(ioc + " is inactive")
+                continue
 
-                    ioc_list.append({'ioc':report_profile['ioc'],
-                                     'port': report_profile['port'],
-                                     'dir': profile['folder']})
-                else:
-                    print(report_profile['ioc'] + " is not a regular ioc.")
-            else:
-                print(report_profile['ioc'] + " is inactive.")
+            index = report[4].index('/')
+            rindex = report[4].rindex('/')
+            folder = report[4][report[4].index('/'):report[4].rindex('/')]
+            if "/epics/iocs" not in folder: 
+                print(ioc + " is not a regular ioc.")
+                continue
 
+            port = report[3].strip()
+            ioc_list.append({'ioc':ioc,
+                             'port': port,
+                             'dir': folder})
+
+    f.close()
+
+    print(ioc_list)
 #==========================================
 
 
@@ -75,25 +92,27 @@ def get_iocs():
 #==========================================
 def get_iocnames():
     for i in range(len(ioc_list)-1, -1, -1):
-        record_file = "/epics/iocs/" + ioc_list[i]['dir'] + "/records.dbl"
+        record_file = ioc_list[i]['dir'] + "/records.dbl"
 
         if os.path.exists(record_file):
             process = os.popen("grep -m 1 IOC: " + record_file)
             pv = process.read()
-            pv = pv.replace("\n", "")
             process.close()
 
-            pv_profile = parse("{sys}{{{iocname}}}{dontcare}",pv)
-            if (pv_profile==None):
+            if "XF" not in pv:
                 print("Information not found in " + pv)
-                no_pv_list.append("/epics_iocs/" + ioc_list[i]['dir'])
+                no_pv_list.append(ioc_list[i]['dir'])
                 ioc_list.pop(i)
                 continue
-            ioc_list[i]['sys'] = pv_profile['sys']
-            ioc_list[i]['iocname'] = pv_profile['iocname']
+            pv = pv.replace("\n", "")
+            
+            sys = pv[0:pv.index('{')]
+            iocname = pv[pv.index('{'):pv.index('}')]
+            ioc_list[i]['sys'] = sys
+            ioc_list[i]['iocname'] = iocname
         else:
-            print("No records.dbl in /epics/iocs/" + ioc_list[i]['dir'])
-            no_rec_list.append("/epics_iocs/" + ioc_list[i]['dir'])
+            print("No records.dbl in " + ioc_list[i]['dir'])
+            no_rec_list.append(ioc_list[i]['dir'])
             ioc_list.pop(i)
 #==========================================
 
