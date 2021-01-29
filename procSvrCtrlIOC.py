@@ -14,7 +14,7 @@ CONFIG_FILE = "procSvrCtrl/config"
 
 status_list = []
 ioc_list = []
-ignore_list = ["procSvrCtrl"]
+ignore_list = ["procSvrCtrl", "test", "test1", "test2", "omega_i_series"]
 no_rec_list = []
 no_pv_list = []
 hostname =[]
@@ -32,18 +32,17 @@ def get_iocs():
     with open (STATUS_LIST_FILE, 'r') as f:
         for line in f:
             if '/etc/init.d' not in line:
-                print(line + " is an invalid record")
+                #print(line + " is an invalid record")
                 continue
 
             status_profile = line.split('\t')
             ioc = status_profile[0][20:len(status_profile[0])]
-            print("IOC: " + ioc)
             if ioc in ignore_list:
                 print(ioc + " ignored.")
                 continue
                 
             status = status_profile[len(status_profile)-1]
-            if "Not registered" in status:
+            if "Stopped" in status and "Not registered" in status:
                 print(ioc + " is inactive.")
                 continue
 
@@ -51,29 +50,29 @@ def get_iocs():
 
     f.close()
 
-    print(status_list)
 
     # Get directories of the IOCs
     with open (REPORT_LIST_FILE, 'r') as f:
         for line in f:
             if '/epics/iocs' not in line:
-                print(line + " is an invalid record")
+                #print(line + " is an invalid record")
                 continue
 
             report = line.split('|')
             ioc= report[1].strip()
-            print("IOC: " + ioc + " in record " + line)
             
             if ioc not in status_list:
-                print(ioc + " is inactive")
+                continue
+
+            if "/epics/iocs" not in report[4]: 
+                print(ioc + " is not a regular ioc.")
                 continue
 
             index = report[4].index('/')
-            rindex = report[4].rindex('/')
-            folder = report[4][report[4].index('/'):report[4].rindex('/')]
-            if "/epics/iocs" not in folder: 
-                print(ioc + " is not a regular ioc.")
-                continue
+            folder = report[4][index:index+12]
+            report[4] = report[4][index+12:len(report[4])]
+            index = report[4].index('/')
+            folder = folder + report[4][0:index]
 
             port = report[3].strip()
             ioc_list.append({'ioc':ioc,
@@ -82,7 +81,6 @@ def get_iocs():
 
     f.close()
 
-    print(ioc_list)
 #==========================================
 
 
@@ -227,6 +225,8 @@ get_iocs()
 
 get_iocnames()
 
+if os.path.exists("procSvrCtrl"):
+    os.system("rm -r procSvrCtrl")
 os.system('mkdir procSvrCtrl')
 
 create_sub_file()
@@ -246,14 +246,16 @@ print("Info: " + str(len(ioc_list)) + " IOCs found")
 
 print("==========================================================")
 
-print("WARNING: The following IOCs don't have records.dbl")
-for i in range(len(no_rec_list)):
-    print(no_rec_list[i])
+if len(no_rec_list)>0:
+    print("WARNING: The following IOCs don't have records.dbl")
+    for i in range(len(no_rec_list)):
+        print(no_rec_list[i])
 
-print("==========================================================")
+    print("==========================================================")
 
-print("WARNING: The following IOCs don't have IOC name in PV")
-for i in range(len(no_pv_list)):
-    print(no_pv_list[i])
+if len(no_pv_list)>0:
+    print("WARNING: The following IOCs don't have IOC name in PV")
+    for i in range(len(no_pv_list)):
+        print(no_pv_list[i])
 
-print("==========================================================")
+    print("==========================================================")
