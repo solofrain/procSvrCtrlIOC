@@ -1,0 +1,1 @@
+epicsEnvSet("PROCSERVCONTROL", "/epics/modules/procServControl")
