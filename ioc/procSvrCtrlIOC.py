@@ -124,13 +124,15 @@ def get_iocnames():
             pv = pv.replace("\n", "")
             
             sys = pv[0:pv.index('{')]
-            iocname = pv[pv.index('{'):pv.index('}')]
+            iocname = pv[pv.index('{')+1:pv.index('}')]
             ioc_list[i]['sys'] = sys
             ioc_list[i]['iocname'] = iocname
         else:
             print("No records.dbl in " + ioc_list[i]['dir'])
             no_rec_list.append(ioc_list[i]['dir'])
             ioc_list.pop(i)
+            
+    print(ioc_list)
 #==========================================
 
 
@@ -405,7 +407,7 @@ def create_opi():
         f.write('      <height>' + str(link_container_height) + '</height>\n')
         f.write('      <macros>\n')
         f.write('        <include_parent_macros>true</include_parent_macros>\n')
-        f.write('        <ioc>' + ioc_list[i]['sys'] + ioc_list[i]['iocname'] + '}</ioc>\n')
+        f.write('        <ioc>' + ioc_list[i]['sys'] + '{' + ioc_list[i]['iocname'] + '}</ioc>\n')
         f.write('      </macros>\n')
         f.write('      <name>Linking Container_1</name>\n')
         f.write('      <opi_file>' + link_opi_file + '</opi_file>\n')
