@@ -1,0 +1,86 @@
+# % macro, P, Device prefix
+# % macro, PORT, Asyn port name
+# % macro, SHOWOUT, Set this to 0 to disable the IOC output display
+# % macro, MANUALSTART, Set this to # if the IOC is manually started. This changes the severity of STATUS
+# % macro, name, Object and gui association name
+# % gui, $(name=), edm, procServControl.edl, procServ=$(SYS){$(DEV)}
+# # \file
+# # This template allows monitoring of an IOC running through procServ in
+# # EPICS. It should be run in a separate IOC, but needs to be running on the
+# # same machine as procServ as procServ only allows localhost access
+# # \image html procServ.png "Gui snapshot"
+
+# This associates BOY screens with the template
+# Note this refers to the OPI for HW status in BLGui which uses
+# PVs from procserv and deviocstats
+# % gui, $(name=), boycomponent, procServControlApp_opi/procServControl.opi, P=$(SYS){$(DEV)}, name=$(name=)
+
+record(stringin, "$(SYS){$(DEV)}IOCNAME") {
+  field(DESC, "IOC Name")
+}
+
+#% archiver 10 Monitor
+record(bi, "$(SYS){$(DEV)}AUTORESTART") {
+  field(DESC, "Autorestart readback")
+  field(ZNAM, "Off")
+  field(ONAM, "On")
+}
+
+record(bo, "$(SYS){$(DEV)}SHOWOUT") {
+  field(DESC, "Show IOC output")
+  field(ZNAM, "No")
+  field(ONAM, "Yes")
+  field(VAL, "$(SHOWOUT=1)")
+  field(PINI, "YES")
+}
+
+
+#% archiver 10 Monitor
+# %gdatag,template,simpleMbbinary,$(SYS){$(DEV)},Current status for IOC $(SYS){$(DEV)}
+# %gdatag,mbbinary,ro,$(SYS){$(DEV)},RECORD,PV
+# % gui, $(name=), sevr
+record(mbbi, "$(SYS){$(DEV)}STATUS") {
+  field(DESC, "Process status")
+  field(ZRST, "Running")
+  field(ONST, "Shutdown")
+  field(TWST, "procServ Stopped")
+  field(THST, "Invalid portname")  
+$(MANUALSTART=)  field(ONSV, "MAJOR")
+  field(TWSV, "MAJOR")
+  field(THSV, "MAJOR")  
+  field(ZRVL, "0")
+  field(ONVL, "1")
+  field(TWVL, "2")
+  field(THVL, "3")  
+}
+
+#% archiver 10 Monitor
+record(busy, "$(SYS){$(DEV)}TOGGLE") {
+  field(DESC, "Autorestart toggle")
+}
+
+#% archiver 10 Monitor
+record(busy, "$(SYS){$(DEV)}START") {
+  field(DESC, "Start IOC")
+}
+
+#% archiver 10 Monitor
+record(busy, "$(SYS){$(DEV)}STOP") {
+  field(DESC, "Stop IOC")
+}
+
+#% archiver 10 Monitor
+record(busy, "$(SYS){$(DEV)}RESTART") {
+  field(DESC, "Restart IOC")
+}
+
+record(waveform, "$(SYS){$(DEV)}IOCOUT") {
+    field(DESC, "Last 20 lines of IOC output")
+    field(NELM, "5120")
+    field(FTVL, "UCHAR")
+}
+
+record(stringin, "$(SYS){$(DEV)}PORT") {
+  field(VAL, "$(PORT)")
+  field(PINI, "YES")
+}
