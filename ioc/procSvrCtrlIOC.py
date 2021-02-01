@@ -9,7 +9,7 @@ REPORT_LIST_FILE = "report.list"
 
 SUB_FILE = "procSvrCtrl/procServControl.substitutions"
 ST_CMD_FILE = "procSvrCtrl/st.cmd"
-ENV_PATHS_FILE = "procSvrCtrl/envPaths"
+#ENV_PATHS_FILE = "procSvrCtrl/envPaths"
 CONFIG_FILE = "procSvrCtrl/config"
 
 status_list = []
@@ -132,7 +132,6 @@ def get_iocnames():
             no_rec_list.append(ioc_list[i]['dir'])
             ioc_list.pop(i)
             
-    print(ioc_list)
 #==========================================
 
 
@@ -151,7 +150,7 @@ def create_sub_file():
     f.write('    manualstart = ""\n')
     f.write("}\n")
     f.write("\n")
-    f.write('file "$(PROCSERVCONTROL)/db/procServControl.db"\n')
+    f.write('file "db/procServControl.db"\n')
     f.write("{\n")
     f.write("pattern\n")
     f.write("{ SYS , DEV , PORT }\n")
@@ -187,18 +186,20 @@ def create_st_cmd():
 
     f = open(ST_CMD_FILE, 'w')
 
-    f.write("#!/epics/modules/procServControl/bin/linux-x86_64/procServControl\n\n")
+    f.write("#!../../bin/linux-x86_64/procServControl\n\n")
     f.write('< envPaths\n')
     f.write('< /epics/common/' + hostname + '-netsetup.cmd\n\n')
 
-    f.write('dbLoadDatabase("$(PROCSERVCONTROL)/dbd/procServControl.dbd",0,0)\n')
+    f.write('cd $(TOP)\n')
+
+    f.write('dbLoadDatabase("dbd/procServControl.dbd",0,0)\n')
     f.write('procServControl_registerRecordDeviceDriver(pdbbase)\n\n')
 
 
     for i in range(len(ioc_list)):
         f.write('drvAsynIPPortConfigure("port' + str(i+1) + '",  "localhost:' + ioc_list[i]['port'] + '",  100, 0, 0)\n')
 
-    f.write('\ndbLoadTemplate("procServControl.substitutions")\n\n')
+    f.write('\ndbLoadTemplate("db/procServControl.substitutions")\n\n')
 
     f.write('iocInit()\n\n')
 
@@ -216,14 +217,14 @@ def create_st_cmd():
 #==========================================
 # Create envPaths
 #==========================================
-def create_env_paths():
-    print('Creating envPaths...')
-
-    f = open(ENV_PATHS_FILE, 'w')
-
-    f.write('epicsEnvSet("PROCSERVCONTROL", "/epics/modules/procServControl")\n')
-
-    f.close()
+#def create_env_paths():
+#    print('Creating envPaths...')
+#
+#    f = open(ENV_PATHS_FILE, 'w')
+#
+#    f.write('epicsEnvSet("PROCSERVCONTROL", "/epics/modules/procServControl")\n')
+#
+#    f.close()
 #==========================================
 
 
@@ -240,8 +241,8 @@ def create_config():
 
     f = open(CONFIG_FILE, 'w')
 
-    f.write('NAME=procSvrCtrl\n')
-    f.write('USER=softioc')
+    f.write('NAME=procServControl\n')
+    f.write('USER=softioc\n')
     f.write('PORT=' + port)
     f.write('HOST=' + hostname)
 
@@ -449,7 +450,7 @@ create_sub_file()
 
 create_st_cmd()
 
-create_env_paths()
+#create_env_paths()
 
 create_config()
 
