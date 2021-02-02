@@ -260,10 +260,11 @@ def create_opi():
 
     num_iocs = len(ioc_list)
     group_container_height = 60 + num_iocs*26
+    group_container_width  = 1000
     link_container_x = 20
     link_container_y = 20
     link_container_height = 26
-    link_container_width = 905
+    link_container_width  = 905
     link_opi_file = '../../common/ct/ioc_single_line_ext.opi'
 
     f = open(hostname+".opi", 'w')
@@ -339,7 +340,7 @@ def create_opi():
     f.write('    <tooltip></tooltip>\n')
     f.write('    <visible>true</visible>\n')
     f.write('    <widget_type>Linking Container</widget_type>\n')
-    f.write('    <width>950</width>\n')
+    f.write('    <width>' + str(group_container_width) + '</width>\n')
     f.write('    <wuid>-77f41667:14a6d5da675:-7212</wuid>\n')
     f.write('    <x>0</x>\n')
     f.write('    <y>0</y>\n')
@@ -383,7 +384,7 @@ def create_opi():
     f.write('    <widget_type>Grouping Container</widget_type>\n')
     f.write('    <width>960</width>\n')
     f.write('    <wuid>-77f41667:14a6d5da675:-71ef</wuid>\n')
-    f.write('    <x>35</x>\n')
+    f.write('    <x>40</x>\n')
     f.write('    <y>80</y>\n')
 
     for i in range(num_iocs):
